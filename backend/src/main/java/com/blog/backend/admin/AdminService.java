@@ -67,7 +67,7 @@ public class AdminService {
         }
         Category category = new Category();
         category.setName(request.name());
-        category.setSlug(SlugUtils.toSlug(request.name()));
+        category.setSlug(generateUniqueCategorySlug(request.name()));
         category = categoryRepository.save(category);
         return new CategoryVO(category.getId(), category.getName(), category.getSlug());
     }
@@ -79,18 +79,50 @@ public class AdminService {
         }
         Tag tag = new Tag();
         tag.setName(request.name());
-        tag.setSlug(SlugUtils.toSlug(request.name()));
+        tag.setSlug(generateUniqueTagSlug(request.name()));
         tag = tagRepository.save(tag);
         return new TagVO(tag.getId(), tag.getName(), tag.getSlug());
     }
 
     @Transactional
     public void deleteCategory(Long id) {
+        if (!categoryRepository.existsById(id)) {
+            throw new BusinessException(404, "分类不存在");
+        }
+        if (postRepository.existsByCategory_Id(id)) {
+            throw new BusinessException(400, "分类已被文章使用，无法删除");
+        }
         categoryRepository.deleteById(id);
     }
 
     @Transactional
     public void deleteTag(Long id) {
+        if (!tagRepository.existsById(id)) {
+            throw new BusinessException(404, "标签不存在");
+        }
+        if (postRepository.existsByTags_Id(id)) {
+            throw new BusinessException(400, "标签已被文章使用，无法删除");
+        }
         tagRepository.deleteById(id);
+    }
+
+    private String generateUniqueCategorySlug(String name) {
+        String base = SlugUtils.toSlug(name);
+        String candidate = base;
+        int index = 1;
+        while (categoryRepository.findBySlug(candidate).isPresent()) {
+            candidate = base + "-" + index++;
+        }
+        return candidate;
+    }
+
+    private String generateUniqueTagSlug(String name) {
+        String base = SlugUtils.toSlug(name);
+        String candidate = base;
+        int index = 1;
+        while (tagRepository.findBySlug(candidate).isPresent()) {
+            candidate = base + "-" + index++;
+        }
+        return candidate;
     }
 }

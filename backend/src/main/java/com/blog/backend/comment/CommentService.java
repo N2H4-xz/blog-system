@@ -37,6 +37,10 @@ public class CommentService {
     @Transactional(readOnly = true)
     public List<CommentTreeVO> listByPost(Long postId) {
         AppUserPrincipal currentUser = SecurityUtils.getCurrentUserOrNull();
+        Post post = postRepository.findById(postId).orElseThrow(() -> new BusinessException(404, "文章不存在"));
+        if (post.getStatus() != PostStatus.PUBLISHED && !isAdmin(currentUser)) {
+            throw new BusinessException(404, "文章不存在");
+        }
         List<Comment> comments = currentUser != null && "ADMIN".equals(currentUser.getRole())
                 ? commentRepository.findByPostIdOrderByCreatedAtAsc(postId)
                 : commentRepository.findByPostIdAndStatusOrderByCreatedAtAsc(postId, CommentStatus.APPROVED);
@@ -102,6 +106,9 @@ public class CommentService {
         if (parent.getParent() != null) {
             throw new BusinessException(400, "仅支持一级回复");
         }
+        if (parent.getStatus() != CommentStatus.APPROVED || parent.getPost().getStatus() != PostStatus.PUBLISHED) {
+            throw new BusinessException(400, "该评论暂不可回复");
+        }
         User user = userRepository.findById(principal.getId()).orElseThrow(() -> new BusinessException(404, "用户不存在"));
         Comment reply = new Comment();
         reply.setPost(parent.getPost());
@@ -118,6 +125,9 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new BusinessException(404, "评论不存在"));
         if (!canDelete(comment, currentUser)) {
             throw new BusinessException(403, "无权限删除该评论");
+        }
+        if (comment.getParent() == null) {
+            commentRepository.deleteAll(commentRepository.findByParentId(commentId));
         }
         commentRepository.delete(comment);
     }
@@ -149,11 +159,15 @@ public class CommentService {
         if (currentUser == null) {
             return false;
         }
-        if ("ADMIN".equals(currentUser.getRole())) {
+        if (isAdmin(currentUser)) {
             return true;
         }
         boolean isCommentOwner = comment.getUser() != null && comment.getUser().getId().equals(currentUser.getId());
         boolean isPostOwner = comment.getPost().getAuthor().getId().equals(currentUser.getId());
         return isCommentOwner || isPostOwner;
+    }
+
+    private boolean isAdmin(AppUserPrincipal currentUser) {
+        return currentUser != null && "ADMIN".equals(currentUser.getRole());
     }
 }

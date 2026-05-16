@@ -13,4 +13,8 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
     Optional<Post> findBySlugAndStatus(String slug, PostStatus status);
 
     List<Post> findTop5ByStatusAndIsPinnedOrderByPublishedAtDesc(PostStatus status, boolean isPinned);
+
+    boolean existsByCategory_Id(Long categoryId);
+
+    boolean existsByTags_Id(Long tagId);
 }

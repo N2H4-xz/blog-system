@@ -10,5 +10,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     List<Comment> findByPostIdOrderByCreatedAtAsc(Long postId);
 
+    List<Comment> findByParentId(Long parentId);
+
     long countByStatus(CommentStatus status);
 }
