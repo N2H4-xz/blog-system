@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api, unwrap } from '../../lib/api';
 import { Pagination } from '../../components/Pagination';
 import { usePageTitle } from '../../hooks/usePageTitle';
@@ -9,13 +9,16 @@ export function AdminPostsPage() {
   const [page, setPage] = useState(1);
   const [data, setData] = useState<PageResponse<PostSummary>>();
 
-  const load = async (currentPage = page) => {
+  const load = useCallback(async (currentPage: number) => {
     setData(await unwrap<PageResponse<PostSummary>>(api.get('/admin/posts', { params: { page: currentPage, pageSize: 10 } })));
-  };
+  }, []);
 
   useEffect(() => {
-    void load(page);
-  }, [page]);
+    const timeoutId = window.setTimeout(() => {
+      void load(page);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [load, page]);
 
   return (
     <section className="admin-card stack">
@@ -34,7 +37,7 @@ export function AdminPostsPage() {
                 className="ghost-button"
                 onClick={async () => {
                   await api.patch(`/admin/posts/${post.id}/pin`, null, { params: { pinned: !post.pinned } });
-                  await load();
+                  await load(page);
                 }}
               >
                 {post.pinned ? '取消置顶' : '置顶'}
@@ -43,7 +46,7 @@ export function AdminPostsPage() {
                 className="text-button"
                 onClick={async () => {
                   await api.delete(`/admin/posts/${post.id}`);
-                  await load();
+                  await load(page);
                 }}
               >
                 删除

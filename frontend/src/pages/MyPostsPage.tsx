@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, unwrap } from '../lib/api';
 import { Pagination } from '../components/Pagination';
@@ -14,7 +14,7 @@ export function MyPostsPage() {
   const [pageData, setPageData] = useState<PageResponse<PostSummary>>();
   const [error, setError] = useState('');
 
-  const load = async (currentPage = page) => {
+  const load = useCallback(async (currentPage: number) => {
     try {
       const data = await unwrap<PageResponse<PostSummary>>(api.get('/user/posts', { params: { page: currentPage, pageSize: 8 } }));
       setPageData(data);
@@ -22,11 +22,14 @@ export function MyPostsPage() {
     } catch (err) {
       setError(getErrorMessage(err));
     }
-  };
+  }, []);
 
   useEffect(() => {
-    void load(page);
-  }, [page]);
+    const timeoutId = window.setTimeout(() => {
+      void load(page);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [load, page]);
 
   return (
     <div className="stack">

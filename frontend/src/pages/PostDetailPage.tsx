@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import DOMPurify from 'dompurify';
 import { Link, useParams } from 'react-router-dom';
 import { api, unwrap } from '../lib/api';
@@ -15,7 +15,7 @@ export function PostDetailPage() {
   const [error, setError] = useState('');
   usePageTitle(post?.title ?? '文章详情');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const detail = await unwrap<PostDetail>(api.get(`/posts/${slug}`));
       const commentList = await unwrap<CommentNode[]>(api.get(`/posts/${detail.id}/comments`));
@@ -25,11 +25,14 @@ export function PostDetailPage() {
     } catch (err) {
       setError(getErrorMessage(err));
     }
-  };
+  }, [slug]);
 
   useEffect(() => {
-    void load();
-  }, [slug]);
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [load]);
 
   if (error) {
     return <div className="empty-state">{error}</div>;

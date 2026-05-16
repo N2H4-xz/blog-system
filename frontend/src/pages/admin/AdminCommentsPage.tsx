@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api, unwrap } from '../../lib/api';
 import { formatDate } from '../../lib/format';
 import { usePageTitle } from '../../hooks/usePageTitle';
@@ -8,13 +8,16 @@ export function AdminCommentsPage() {
   usePageTitle('评论审核');
   const [comments, setComments] = useState<AdminComment[]>([]);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setComments(await unwrap<AdminComment[]>(api.get('/admin/comments')));
-  };
+  }, []);
 
   useEffect(() => {
-    void load();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [load]);
 
   return (
     <section className="admin-card stack">

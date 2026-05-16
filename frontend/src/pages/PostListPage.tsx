@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api, unwrap } from '../lib/api';
 import { Pagination } from '../components/Pagination';
@@ -10,14 +10,15 @@ export function PostListPage() {
   usePageTitle('文章列表');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const filtersFormRef = useRef<HTMLFormElement>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [pageData, setPageData] = useState<PageResponse<PostSummary>>();
-  const [filters, setFilters] = useState({
+  const filters = useMemo(() => ({
     keyword: searchParams.get('keyword') ?? '',
     categoryId: searchParams.get('categoryId') ?? '',
     tagId: searchParams.get('tagId') ?? '',
-  });
+  }), [searchParams]);
   const page = Number(searchParams.get('page') ?? '1');
 
   useEffect(() => {
@@ -26,14 +27,6 @@ export function PostListPage() {
       setTags(tagData);
     });
   }, []);
-
-  useEffect(() => {
-    setFilters({
-      keyword: searchParams.get('keyword') ?? '',
-      categoryId: searchParams.get('categoryId') ?? '',
-      tagId: searchParams.get('tagId') ?? '',
-    });
-  }, [searchParams]);
 
   useEffect(() => {
     void unwrap<PageResponse<PostSummary>>(
@@ -69,16 +62,19 @@ export function PostListPage() {
   const selectedTag = tags.find((item) => String(item.id) === filters.tagId);
 
   const applyFilters = (nextPage = 1) => {
+    const formData = new FormData(filtersFormRef.current ?? undefined);
+    const keyword = String(formData.get('keyword') ?? '').trim();
+    const categoryId = String(formData.get('categoryId') ?? '');
+    const tagId = String(formData.get('tagId') ?? '');
     const params = new URLSearchParams();
-    if (filters.keyword) params.set('keyword', filters.keyword);
-    if (filters.categoryId) params.set('categoryId', filters.categoryId);
-    if (filters.tagId) params.set('tagId', filters.tagId);
+    if (keyword) params.set('keyword', keyword);
+    if (categoryId) params.set('categoryId', categoryId);
+    if (tagId) params.set('tagId', tagId);
     params.set('page', String(nextPage));
     navigate(`/posts?${params.toString()}`);
   };
 
   const resetFilters = () => {
-    setFilters({ keyword: '', categoryId: '', tagId: '' });
     navigate('/posts?page=1');
   };
 
@@ -102,12 +98,20 @@ export function PostListPage() {
           <span className="meta-row">{pageData?.total ?? 0} 篇</span>
         </div>
 
-        <div className="filters-grid">
+        <form
+          ref={filtersFormRef}
+          key={searchParams.toString()}
+          className="filters-grid"
+          onSubmit={(event) => {
+            event.preventDefault();
+            applyFilters(1);
+          }}
+        >
           <label className="field">
             <span className="field-label">关键词</span>
             <input
-              value={filters.keyword}
-              onChange={(event) => setFilters((current) => ({ ...current, keyword: event.target.value }))}
+              name="keyword"
+              defaultValue={filters.keyword}
               placeholder="标题或摘要"
             />
           </label>
@@ -117,8 +121,8 @@ export function PostListPage() {
             <span className="select-shell">
               <select
                 className="select-input"
-                value={filters.categoryId}
-                onChange={(event) => setFilters((current) => ({ ...current, categoryId: event.target.value }))}
+                name="categoryId"
+                defaultValue={filters.categoryId}
               >
                 <option value="">全部分类</option>
                 {categories.map((category) => (
@@ -134,7 +138,7 @@ export function PostListPage() {
           <label className="field">
             <span className="field-label">标签</span>
             <span className="select-shell">
-              <select className="select-input" value={filters.tagId} onChange={(event) => setFilters((current) => ({ ...current, tagId: event.target.value }))}>
+              <select className="select-input" name="tagId" defaultValue={filters.tagId}>
                 <option value="">全部标签</option>
                 {tags.map((tag) => (
                   <option key={tag.id} value={tag.id}>
@@ -145,13 +149,13 @@ export function PostListPage() {
               <span className="select-chevron" aria-hidden="true" />
             </span>
           </label>
-        </div>
+        </form>
 
         <div className="actions-row">
-          <button className="accent-button" onClick={() => applyFilters(1)}>
+          <button className="accent-button" type="button" onClick={() => applyFilters(1)}>
             检索
           </button>
-          <button className="text-button" onClick={resetFilters}>
+          <button className="text-button" type="button" onClick={resetFilters}>
             清空
           </button>
         </div>

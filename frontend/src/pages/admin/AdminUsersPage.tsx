@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api, unwrap } from '../../lib/api';
 import { usePageTitle } from '../../hooks/usePageTitle';
 import type { AdminUser } from '../../types';
@@ -7,13 +7,16 @@ export function AdminUsersPage() {
   usePageTitle('用户管理');
   const [users, setUsers] = useState<AdminUser[]>([]);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setUsers(await unwrap<AdminUser[]>(api.get('/admin/users')));
-  };
+  }, []);
 
   useEffect(() => {
-    void load();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [load]);
 
   return (
     <section className="admin-card stack">

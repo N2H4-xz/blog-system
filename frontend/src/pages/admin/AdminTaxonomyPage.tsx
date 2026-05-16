@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api, unwrap } from '../../lib/api';
 import { usePageTitle } from '../../hooks/usePageTitle';
 import type { Category, Tag } from '../../types';
@@ -10,15 +10,18 @@ export function AdminTaxonomyPage() {
   const [categoryName, setCategoryName] = useState('');
   const [tagName, setTagName] = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const [categoryData, tagData] = await Promise.all([unwrap<Category[]>(api.get('/categories')), unwrap<Tag[]>(api.get('/tags'))]);
     setCategories(categoryData);
     setTags(tagData);
-  };
+  }, []);
 
   useEffect(() => {
-    void load();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [load]);
 
   return (
     <div className="grid-two">
