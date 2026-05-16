@@ -1,41 +1,34 @@
-# 墨屿博客 - 后端A（认证模块）
+# 墨屿博客 - 前端B（文章管理模块）
 
-这是墨屿博客系统的后端认证模块，包含用户认证、安全配置和基础设施。
+这是墨屿博客系统的前端文章管理模块，包含文章列表、详情、编辑器、管理后台等页面。
 
 ## 技术栈
 
-- Java 21
-- Spring Boot 4.0.5
-- Spring Data JPA
-- Spring Security + JWT
-- MySQL 8.4
-- Redis 7.4（可选）
+- React 19 + TypeScript 6
+- Vite 8
+- react-router-dom 7
+- zustand 5
+- axios
+- react-markdown
+- dompurify
 
 ## 功能
 
-- 用户注册和登录
-- JWT 令牌管理（访问令牌和刷新令牌）
-- 用户认证和授权
-- 安全配置
-- 数据实体和仓库
-- Redis/内存双实现存储
+- 文章列表（带筛选和分页）
+- 文章详情（Markdown 渲染）
+- 文章编辑器（Markdown 编辑和预览）
+- 我的文章管理
+- 管理后台（仪表盘、文章管理、评论审核、用户管理、分类标签管理）
 
 ## 本地运行
 
-### 1. 启动基础服务
-
 ```bash
-docker compose up -d
+npm install
+npm run dev
 ```
 
-### 2. 启动后端
-
-```bash
-./gradlew bootRun
-```
-
-默认地址：`http://localhost:8080`
+默认地址：`http://localhost:5173`
 
 ## 合并说明
 
-本仓库需要与后端B（业务模块）合并后才是完整的后端系统。
+本仓库需要与前端A（认证模块）合并后才是完整的前端系统。
