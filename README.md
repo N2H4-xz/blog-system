@@ -1,6 +1,6 @@
  # 墨屿博客系统
 
-一个前后端分离的博客系统，后端使用 `Spring Boot + MySQL + Redis`，前端使用 `React + TypeScript + Vite`。
+一个前后端分离的博客系统，后端使用 `Spring Boot + MySQL`，前端使用 `React + TypeScript + Vite`。
 
 ## 已实现能力
 
@@ -20,13 +20,15 @@
 
 ## 本地运行
 
-### 1. 启动基础服务
+### 1. 准备本地 MySQL
 
-先在项目根目录执行：
+确认本机 MySQL 已启动，并创建默认数据库：
 
 ```powershell
-docker compose up -d
+mysql -uroot -proot -e "CREATE DATABASE IF NOT EXISTS blog_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
+
+默认连接地址为 `jdbc:mysql://localhost:3306/blog_system`，可通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 覆盖。
 
 ### 2. 启动后端
 
@@ -63,5 +65,5 @@ $env:BOOTSTRAP_ADMIN_PASSWORD="<your-password>"
 ## 说明
 
 - 前端已配置 Vite 代理，开发环境下 `/api` 会转发到后端。
-- 如果本地暂时没有 Redis，可设置环境变量 `APP_REDIS_ENABLED=false` 退回内存实现。
+- 评论限流、刷新令牌和阅读量暂存使用进程内内存实现，不再依赖 Redis。
 - 默认数据库连接可通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 覆盖。

@@ -24,7 +24,7 @@ export function HomePage() {
     <div className="page-stack">
       <section className="hero">
         <div className="hero-content">
-          <span className="section-kicker">Spring Boot + React + Redis</span>
+          <span className="section-kicker">Spring Boot + React + MySQL</span>
           <h1 className="hero-title">墨屿博客</h1>
           <p className="hero-body">
             支持角色权限、Markdown 创作、分类标签、评论审核与独立后台管理的现代博客系统。

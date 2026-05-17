@@ -55,7 +55,7 @@ public class DataInitializer {
             seedTag("Spring Boot");
             seedTag("React");
             seedTag("TypeScript");
-            seedTag("Redis");
+            seedTag("MySQL");
         };
     }
 
